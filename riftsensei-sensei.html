@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>RiftSensei — Ask Sensei</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --gold:#C8AA6E;--gold-l:#F0E6D3;--gold-d:#785A28;
+  --blue:#1E90FF;--blue-l:#60B8FF;
+  --bg:#01080F;--bg2:#020D18;
+  --glass:rgba(8,18,32,.85);--glass2:rgba(12,24,42,.92);
+  --bdr:rgba(200,170,110,.15);--bdr-b:rgba(30,144,255,.18);--bdr-w:rgba(255,255,255,.06);
+  --txt:#A0B8C8;--dim:#2E4050;--wht:#EEF4FF;
+  --green:#00C853;--green-d:#004D20;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:'Rajdhani',sans-serif;overflow:hidden;}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% -10%,rgba(30,144,255,.07),transparent 55%),
+    radial-gradient(ellipse 60% 50% at 10% 80%,rgba(200,170,110,.04),transparent 50%),
+    linear-gradient(160deg,#020B18,#010912 60%,#020B18);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(30,144,255,.02) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(30,144,255,.02) 1px,transparent 1px);
+  background-size:48px 48px;animation:gd 30s linear infinite;}
+@keyframes gd{0%{background-position:0 0}100%{background-position:48px 48px}}
+
+/* APP */
+.app{position:relative;z-index:1;max-width:430px;margin:0 auto;height:100vh;
+  display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+  background:linear-gradient(180deg,rgba(1,8,15,.97),rgba(1,8,15,.6));
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--bdr);
+}
+.tb-left{display:flex;align-items:center;gap:10px;}
+.tb-hex{width:28px;height:28px;background:linear-gradient(135deg,var(--gold-d),var(--gold));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  box-shadow:0 0 12px rgba(200,170,110,.4);}
+.tb-title{
+  display:flex;flex-direction:column;
+}
+.tb-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.tb-sub{font-size:9px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;}
+.tb-status{display:flex;align-items:center;gap:5px;}
+.tb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:pulse 2s infinite;box-shadow:0 0 6px rgba(0,200,83,.5);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.tb-online{font-size:9px;color:var(--green);letter-spacing:1px;font-weight:700;}
+
+/* CHAMPION SELECT AREA */
+.champ-select{
+  flex-shrink:0;
+  padding:12px 16px;
+  background:var(--glass);
+  border-bottom:1px solid var(--bdr-w);
+  backdrop-filter:blur(10px);
+}
+.cs-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:8px;}
+.cs-row{display:flex;gap:8px;align-items:center;}
+
+.cs-pick{
+  flex:1;
+  background:rgba(1,8,15,.6);border:1px solid var(--bdr-w);
+  border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;transition:all .25s;position:relative;
+}
+.cs-pick:hover{border-color:var(--bdr);}
+.cs-pick.filled{border-color:rgba(200,170,110,.25);}
+.cs-pick-ico{width:32px;height:32px;border-radius:50%;
+  background:var(--glass2);border:1px solid var(--bdr-w);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;overflow:hidden;}
+.cs-pick-ico img{width:100%;height:100%;object-fit:cover;}
+.cs-pick-info{flex:1;min-width:0;}
+.cs-pick-hint{font-size:9px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;}
+.cs-pick-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;
+  color:var(--wht);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.cs-vs{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;
+  color:var(--dim);flex-shrink:0;}
+
+/* Champion picker dropdown */
+.cs-dropdown{
+  position:fixed;
+  left:16px;right:16px;
+  top:160px;
+  background:var(--glass2);border:1px solid rgba(200,170,110,.2);
+  border-radius:14px;backdrop-filter:blur(24px);
+  z-index:500;max-height:280px;overflow-y:auto;
+  scrollbar-width:none;
+  box-shadow:0 12px 50px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);
+  display:none;
+}
+.cs-dropdown.open{display:block;}
+.cs-dropdown::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.cs-dropdown::-webkit-scrollbar{display:none;}
+.cs-search-wrap{padding:8px;position:sticky;top:0;background:var(--glass2);}
+.cs-search{width:100%;background:rgba(1,8,15,.6);border:1px solid var(--bdr-w);
+  border-radius:8px;padding:7px 10px;color:var(--wht);font-family:'Rajdhani',sans-serif;
+  font-size:13px;outline:none;}
+.cs-search::placeholder{color:var(--dim);}
+.cs-options{padding:4px 6px 8px;}
+.cs-option{padding:8px 10px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:all .2s;}
+.cs-option:hover{background:rgba(200,170,110,.08);}
+.cs-opt-icon{width:28px;height:28px;border-radius:50%;background:var(--glass);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.cs-opt-name{font-size:13px;font-weight:600;color:var(--txt);}
+.cs-opt-role{font-size:9px;color:var(--dim);letter-spacing:.5px;}
+
+/* QUICK PROMPTS */
+.quick-prompts{
+  flex-shrink:0;
+  padding:8px 16px;
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  border-bottom:1px solid var(--bdr-w);
+}
+.quick-prompts::-webkit-scrollbar{display:none;}
+.qp{
+  flex-shrink:0;padding:6px 12px;border-radius:100px;
+  background:var(--glass);border:1px solid var(--bdr-w);
+  font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--dim);
+  cursor:pointer;transition:all .25s;white-space:nowrap;
+}
+.qp:hover{border-color:var(--bdr);color:var(--txt);}
+.qp:active{transform:scale(.95);}
+
+/* CHAT AREA */
+.chat-area{
+  flex:1;overflow-y:auto;padding:12px 16px;
+  display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:thin;scrollbar-color:var(--bdr-w) transparent;
+}
+.chat-area::-webkit-scrollbar{width:3px;}
+.chat-area::-webkit-scrollbar-track{background:transparent;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--bdr-w);border-radius:2px;}
+
+/* Welcome message */
+.welcome{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:24px 16px;gap:12px;
+  opacity:0;animation:fadeUp .6s ease .2s forwards;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.welcome-hex{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,var(--gold-d),var(--gold));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 0 30px rgba(200,170,110,.3);
+  animation:hexGlow 3s ease-in-out infinite;
+}
+@keyframes hexGlow{0%,100%{box-shadow:0 0 20px rgba(200,170,110,.25);}50%{box-shadow:0 0 40px rgba(200,170,110,.5);}}
+.welcome-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.welcome-sub{font-size:12px;color:var(--dim);line-height:1.6;max-width:280px;}
+.welcome-tip{
+  background:rgba(30,144,255,.06);border:1px solid var(--bdr-b);
+  border-radius:10px;padding:10px 14px;
+  font-size:11px;color:var(--blue-l);line-height:1.5;
+  max-width:300px;
+}
+
+/* Messages */
+.msg{display:flex;gap:8px;animation:msgIn .4s ease forwards;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.msg-user{flex-direction:row-reverse;}
+.msg-bubble{
+  max-width:80%;padding:10px 14px;border-radius:14px;
+  font-size:13px;line-height:1.55;font-weight:500;
+}
+.msg-user .msg-bubble{
+  background:linear-gradient(135deg,rgba(200,170,110,.15),rgba(200,170,110,.08));
+  border:1px solid var(--bdr);color:var(--wht);border-radius:14px 4px 14px 14px;
+}
+.msg-sensei .msg-bubble{
+  background:var(--glass2);border:1px solid var(--bdr-w);
+  color:var(--txt);border-radius:4px 14px 14px 14px;
+  position:relative;overflow:hidden;
+}
+.msg-sensei .msg-bubble::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--gold),var(--blue-l),transparent);
+}
+
+/* Sensei avatar */
+.msg-avatar{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#071828,#0d2a44);
+  border:1.5px solid rgba(30,144,255,.25);
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  box-shadow:0 0 10px rgba(30,144,255,.15);
+  align-self:flex-end;
+}
+
+/* Structured response styles */
+.resp-section{margin:6px 0;}
+.resp-label{
+  font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;
+  margin-bottom:3px;
+}
+.resp-label.gold{color:var(--gold);}
+.resp-label.blue{color:var(--blue-l);}
+.resp-label.green{color:var(--green);}
+.resp-label.red{color:#FF8A8A;}
+.resp-content{font-size:12px;color:var(--txt);line-height:1.55;}
+.resp-content b{color:var(--wht);}
+.resp-content .highlight{color:var(--gold);font-weight:700;}
+.resp-divider{height:1px;background:rgba(255,255,255,.05);margin:8px 0;}
+
+/* Typing indicator */
+.typing{display:flex;gap:4px;padding:10px 14px;align-items:center;}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);
+  animation:typingBounce .8s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:.15s;}
+.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes typingBounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(-4px);opacity:1;}}
+
+/* INPUT AREA */
+.input-area{
+  flex-shrink:0;
+  padding:10px 16px max(env(safe-area-inset-bottom),12px);
+  background:rgba(1,8,15,.95);
+  border-top:1px solid var(--bdr-w);
+  backdrop-filter:blur(16px);
+}
+.input-wrap{
+  display:flex;gap:8px;align-items:flex-end;
+}
+.chat-input{
+  flex:1;background:var(--glass);border:1px solid var(--bdr-w);
+  border-radius:12px;padding:11px 14px;
+  color:var(--wht);font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:500;
+  outline:none;resize:none;max-height:100px;min-height:42px;
+  transition:all .3s;line-height:1.4;
+  scrollbar-width:none;
+}
+.chat-input::-webkit-scrollbar{display:none;}
+.chat-input::placeholder{color:var(--dim);}
+.chat-input:focus{border-color:rgba(200,170,110,.3);background:var(--glass2);}
+
+.send-btn{
+  width:42px;height:42px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold-d),var(--gold));
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s;box-shadow:0 4px 14px rgba(200,170,110,.2);
+}
+.send-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(200,170,110,.35);}
+.send-btn:active{transform:scale(.92);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.send-btn svg{width:18px;height:18px;fill:none;stroke:#01080F;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;}
+
+.img-btn{
+  width:42px;height:42px;border-radius:12px;flex-shrink:0;
+  background:var(--glass);border:1px solid var(--bdr-w);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .3s;
+  position:relative;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.img-btn:hover{border-color:var(--bdr);background:var(--glass2);}
+.img-btn:active{transform:scale(.92);}
+.img-btn svg{width:18px;height:18px;fill:none;stroke:var(--txt);stroke-width:1.5;
+  stroke-linecap:round;stroke-linejoin:round;}
+.img-btn.has-img{border-color:rgba(200,170,110,.4);background:rgba(200,170,110,.08);}
+.img-btn.has-img svg{stroke:var(--gold);}
+
+/* TABBAR */
+.tabbar{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:2px;justify-content:center;
+  background:rgba(1,8,15,.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--bdr-w);
+  padding:7px 8px max(env(safe-area-inset-bottom),7px);
+}
+.ti{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .3s;}
+.ti svg{width:20px;height:20px;fill:none;stroke-width:1.5;stroke-linecap:round;
+  stroke-linejoin:round;stroke:var(--dim);transition:all .3s;}
+.ti.on{background:linear-gradient(135deg,rgba(200,170,110,.2),rgba(200,170,110,.08));
+  box-shadow:inset 0 0 0 1px rgba(200,170,110,.25);}
+.ti.on svg{stroke:var(--gold);}
+.ti.sensei-tab.on{
+  background:linear-gradient(135deg,rgba(30,144,255,.2),rgba(30,144,255,.08));
+  box-shadow:inset 0 0 0 1px rgba(30,144,255,.3);
+}
+.ti.sensei-tab.on svg{stroke:var(--blue-l);}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-grid"></div>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-hex">⚔️</div>
+      <div class="tb-title">
+        <div class="tb-name">RIFTSENSEI</div>
+        <div class="tb-sub">AI Coach</div>
+      </div>
+    </div>
+    <div class="tb-status">
+      <div class="tb-dot"></div>
+      <div class="tb-online">Online</div>
+    </div>
+  </div>
+
+  <!-- CHAMPION SELECT -->
+  <div class="champ-select">
+    <div class="cs-label">⚡ Set Matchup — Sensei gives better advice</div>
+    <div class="cs-row">
+
+      <!-- My Champion -->
+      <div class="cs-pick" id="myPick" onclick="openPicker('my')">
+        <div class="cs-pick-ico" id="myIcon">🎭</div>
+        <div class="cs-pick-info">
+          <div class="cs-pick-hint">My Champion</div>
+          <div class="cs-pick-name" id="myName">Pick Champion</div>
+        </div>
+        <!-- Dropdown -->
+        <div class="cs-dropdown" id="myDropdown">
+          <div class="cs-search-wrap">
+            <input class="cs-search" id="mySearch" placeholder="Search..." oninput="filterChamps('my',this.value)" onclick="event.stopPropagation()"/>
+          </div>
+          <div class="cs-options" id="myOptions"></div>
+        </div>
+      </div>
+
+      <div class="cs-vs">VS</div>
+
+      <!-- Enemy Champion -->
+      <div class="cs-pick" id="enemyPick" onclick="openPicker('enemy')">
+        <div class="cs-pick-ico" id="enemyIcon">⚔️</div>
+        <div class="cs-pick-info">
+          <div class="cs-pick-hint">Enemy</div>
+          <div class="cs-pick-name" id="enemyName">Pick Enemy</div>
+        </div>
+        <!-- Dropdown -->
+        <div class="cs-dropdown" id="enemyDropdown">
+          <div class="cs-search-wrap">
+            <input class="cs-search" id="enemySearch" placeholder="Search..." oninput="filterChamps('enemy',this.value)" onclick="event.stopPropagation()"/>
+          </div>
+          <div class="cs-options" id="enemyOptions"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QUICK PROMPTS -->
+  <div class="quick-prompts" id="quickPrompts">
+    <div class="qp" onclick="sendQuick('How hard is this matchup and how should I play it?')">⚔️ Matchup Difficulty</div>
+    <div class="qp" onclick="sendQuick('What items should I build in this matchup?')">🛡️ Build Advice</div>
+    <div class="qp" onclick="sendQuick('What are the key tips to win this lane?')">💡 Lane Tips</div>
+    <div class="qp" onclick="sendQuick('What are their power spikes I need to watch out for?')">⚡ Power Spikes</div>
+    <div class="qp" onclick="sendQuick('What runes should I use in this matchup?')">🔮 Runes</div>
+    <div class="qp" onclick="sendQuick('What are the best champions to counter this enemy?')">🎯 Counters</div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area" id="chatArea">
+    <div class="welcome" id="welcomeMsg">
+      <div class="welcome-hex">🥋</div>
+      <div class="welcome-title">Your Sensei Awaits</div>
+      <div class="welcome-sub">Set your matchup above and ask me anything. I'll give you expert Wild Rift advice in seconds.</div>
+      <div class="welcome-tip">
+        💡 Tip: Set both champions first — your Sensei gives much more accurate advice with full matchup context.
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <!-- Image preview -->
+    <div id="imgPreview" style="display:none;margin-bottom:8px;position:relative;">
+      <img id="imgPreviewImg" style="width:100%;max-height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--bdr);"/>
+      <button onclick="clearImage()" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(1,8,15,.9);border:1px solid var(--bdr-w);color:var(--txt);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+      <div style="position:absolute;bottom:6px;left:8px;background:rgba(1,8,15,.8);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--gold);">SCREENSHOT ATTACHED</div>
+    </div>
+    <div class="input-wrap">
+      <div class="img-btn" id="imgBtn" title="Share screenshot" onclick="document.getElementById('imgInput').click()">
+        <input type="file" id="imgInput" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="handleImage(this)"/>
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <textarea class="chat-input" id="chatInput" placeholder="Ask your Sensei anything..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
+        oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABBAR -->
+  <div class="tabbar">
+    <div class="ti" onclick="window.location.href='riftsensei-home-embedded.html'">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="ti">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="ti">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+    </div>
+    <div class="ti sensei-tab on">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="ti">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CHAMPION LIST ──
+const CHAMPS = [
+  {name:'Akali',role:'Mid',emoji:'🥷'},
+  {name:'Ahri',role:'Mid',emoji:'🦊'},
+  {name:'Annie',role:'Mid',emoji:'🔥'},
+  {name:'Aurelion Sol',role:'Mid',emoji:'⭐'},
+  {name:'Cassiopeia',role:'Mid',emoji:'🐍'},
+  {name:'Diana',role:'Mid',emoji:'🌙'},
+  {name:'Fizz',role:'Mid',emoji:'🐟'},
+  {name:'Irelia',role:'Mid/Baron',emoji:'⚔️'},
+  {name:'Katarina',role:'Mid',emoji:'🗡️'},
+  {name:'Lux',role:'Mid/Support',emoji:'✨'},
+  {name:'Orianna',role:'Mid',emoji:'⚙️'},
+  {name:'Twisted Fate',role:'Mid',emoji:'🃏'},
+  {name:'Veigar',role:'Mid',emoji:'🎩'},
+  {name:'Vex',role:'Mid',emoji:'😒'},
+  {name:'Yasuo',role:'Mid',emoji:'💨'},
+  {name:'Zed',role:'Mid',emoji:'🌑'},
+  {name:'Ziggs',role:'Mid',emoji:'💣'},
+  {name:'Zoe',role:'Mid',emoji:'💤'},
+  {name:'Darius',role:'Baron',emoji:'🪓'},
+  {name:'Fiora',role:'Baron',emoji:'🤺'},
+  {name:'Garen',role:'Baron',emoji:'🛡️'},
+  {name:'Malphite',role:'Baron',emoji:'🪨'},
+  {name:'Nasus',role:'Baron',emoji:'🐺'},
+  {name:'Ornn',role:'Baron',emoji:'🔥'},
+  {name:'Renekton',role:'Baron',emoji:'🐊'},
+  {name:'Riven',role:'Baron',emoji:'⚔️'},
+  {name:'Sett',role:'Baron',emoji:'👊'},
+  {name:'Wukong',role:'Baron',emoji:'🐒'},
+  {name:'Camille',role:'Baron',emoji:'⚙️'},
+  {name:'Evelynn',role:'Jungle',emoji:'💜'},
+  {name:'Gragas',role:'Jungle',emoji:'🍺'},
+  {name:'Graves',role:'Jungle',emoji:'🔫'},
+  {name:'Hecarim',role:'Jungle',emoji:'🐴'},
+  {name:'Jarvan IV',role:'Jungle',emoji:'👑'},
+  {name:'Lee Sin',role:'Jungle',emoji:'🥋'},
+  {name:'Master Yi',role:'Jungle',emoji:'⚔️'},
+  {name:'Nautilus',role:'Jungle/Support',emoji:'⚓'},
+  {name:'Olaf',role:'Jungle',emoji:'🪓'},
+  {name:'Rammus',role:'Jungle',emoji:'🌀'},
+  {name:'Vi',role:'Jungle',emoji:'👊'},
+  {name:'Xin Zhao',role:'Jungle',emoji:'⚔️'},
+  {name:'Ashe',role:'Dragon',emoji:'🏹'},
+  {name:'Caitlyn',role:'Dragon',emoji:'🎯'},
+  {name:'Draven',role:'Dragon',emoji:'🎪'},
+  {name:'Ezreal',role:'Dragon',emoji:'💙'},
+  {name:'Jhin',role:'Dragon',emoji:'🌹'},
+  {name:'Jinx',role:'Dragon',emoji:'💥'},
+  {name:"Kai'Sa",role:'Dragon',emoji:'💜'},
+  {name:'Lucian',role:'Dragon',emoji:'🔫'},
+  {name:'Miss Fortune',role:'Dragon',emoji:'🏴‍☠️'},
+  {name:'Samira',role:'Dragon',emoji:'🌹'},
+  {name:'Senna',role:'Dragon/Support',emoji:'🔫'},
+  {name:'Tristana',role:'Dragon',emoji:'💣'},
+  {name:'Varus',role:'Dragon',emoji:'🏹'},
+  {name:'Vayne',role:'Dragon',emoji:'🏹'},
+  {name:'Xayah',role:'Dragon',emoji:'🪶'},
+  {name:'Alistar',role:'Support',emoji:'🐂'},
+  {name:'Blitzcrank',role:'Support',emoji:'🤖'},
+  {name:'Brand',role:'Support',emoji:'🔥'},
+  {name:'Braum',role:'Support',emoji:'🛡️'},
+  {name:'Janna',role:'Support',emoji:'🌪️'},
+  {name:'Karma',role:'Support',emoji:'☯️'},
+  {name:'Lissandra',role:'Support/Mid',emoji:'❄️'},
+  {name:'Lulu',role:'Support',emoji:'🧚'},
+  {name:'Nami',role:'Support',emoji:'🌊'},
+  {name:'Seraphine',role:'Support',emoji:'🎵'},
+  {name:'Sona',role:'Support',emoji:'🎹'},
+  {name:'Soraka',role:'Support',emoji:'⭐'},
+  {name:'Thresh',role:'Support',emoji:'⛓️'},
+  {name:'Yuumi',role:'Support',emoji:'🐱'},
+];
+
+// ── STATE ──
+let myChamp = null;
+let enemyChamp = null;
+let isLoading = false;
+let messages = [];
+
+// ── CHAMPION PICKER ──
+function renderOptions(containerId, champs) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = champs.map(c => `
+    <div class="cs-option" onclick="selectChamp('${containerId==='myOptions'?'my':'enemy'}','${c.name}','${c.emoji}','${c.role}')">
+      <div class="cs-opt-icon">${c.emoji}</div>
+      <div>
+        <div class="cs-opt-name">${c.name}</div>
+        <div class="cs-opt-role">${c.role}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openPicker(type) {
+  const dropdown = document.getElementById(type==='my'?'myDropdown':'enemyDropdown');
+  const other = document.getElementById(type==='my'?'enemyDropdown':'myDropdown');
+  other.classList.remove('open');
+  dropdown.classList.toggle('open');
+  if(dropdown.classList.contains('open')) {
+    renderOptions(type==='my'?'myOptions':'enemyOptions', CHAMPS);
+    setTimeout(()=>document.getElementById(type==='my'?'mySearch':'enemySearch').focus(), 100);
+  }
+}
+
+function filterChamps(type, query) {
+  const filtered = CHAMPS.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+  renderOptions(type==='my'?'myOptions':'enemyOptions', filtered);
+}
+
+function selectChamp(type, name, emoji, role) {
+  if(type==='my') {
+    myChamp = {name, emoji, role};
+    document.getElementById('myIcon').textContent = emoji;
+    document.getElementById('myName').textContent = name;
+    document.getElementById('myPick').classList.add('filled');
+    document.getElementById('myDropdown').classList.remove('open');
+  } else {
+    enemyChamp = {name, emoji, role};
+    document.getElementById('enemyIcon').textContent = emoji;
+    document.getElementById('enemyName').textContent = name;
+    document.getElementById('enemyPick').classList.add('filled');
+    document.getElementById('enemyDropdown').classList.remove('open');
+  }
+  updateQuickPrompts();
+}
+
+function updateQuickPrompts() {
+  if(myChamp && enemyChamp) {
+    document.getElementById('quickPrompts').style.borderTop = '1px solid rgba(200,170,110,.1)';
+  }
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.cs-pick')) {
+    document.querySelectorAll('.cs-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ── CHAT ──
+function buildSystemPrompt() {
+  const matchup = myChamp && enemyChamp
+    ? `The player is playing ${myChamp.name} (${myChamp.role}) against ${enemyChamp.name} (${enemyChamp.role}).`
+    : myChamp
+    ? `The player is playing ${myChamp.name} (${myChamp.role}).`
+    : 'No specific champion context provided.';
+
+  return `You are RiftSensei — an elite Wild Rift coach AI with deep knowledge of the game. You speak like a veteran player: direct, confident, no fluff.
+
+${matchup}
+
+RESPONSE RULES:
+- Keep responses under 180 words total
+- Always structure your response with these sections when relevant:
+  ⚔️ MATCHUP — [Hard/Medium/Easy] + one sentence why
+  🛡️ BUILD ADJUST — specific item changes for this matchup
+  💡 TIPS — exactly 3 short bullet tips
+  ⚡ SENSEI'S WORD — one powerful insight to win
+
+- Use WILD RIFT specific knowledge and terminology ONLY — NEVER use League PC terms:
+  * Say "Baron lane" not "top lane"
+  * Say "Dragon lane" not "bot lane"
+  * Say ability NAMES or "Ability 1/2/3/4" — NEVER say Q/W/E/R
+  * Say "minion score" not "CS"
+  * Say "monster camps" not "jungle camps"  
+  * Say "Marksman" not "ADC"
+  * Say "Roam" not "Support"
+  * Use Wild Rift item names — they differ from PC versions
+  * Reference Wild Rift patch meta — not PC meta
+  * Wild Rift has different stats, scaling and balance than PC
+- Be direct — player has 60 seconds in champion select
+- Bold key items and champion names
+- If no matchup is set, give general Wild Rift advice
+- Never be generic — always give specific actionable advice
+- End every response with the ⚡ SENSEI'S WORD section`;
+}
+
+function addMessage(role, content, isTyping=false) {
+  const chatArea = document.getElementById('chatArea');
+  const welcome = document.getElementById('welcomeMsg');
+  if(welcome) welcome.style.display = 'none';
+
+  const msgEl = document.createElement('div');
+  msgEl.className = `msg msg-${role}`;
+
+  if(role === 'sensei') {
+    msgEl.innerHTML = `
+      <div class="msg-avatar">🥋</div>
+      <div class="msg-bubble">
+        ${isTyping ? '<div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>' : formatResponse(content)}
+      </div>`;
+  } else {
+    msgEl.innerHTML = `<div class="msg-bubble">${content}</div>`;
+  }
+
+  chatArea.appendChild(msgEl);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  return msgEl;
+}
+
+function formatResponse(text) {
+  // Format structured response with colors
+  return text
+    .replace(/⚔️ MATCHUP/g, '<div class="resp-section"><div class="resp-label gold">⚔️ MATCHUP</div><div class="resp-content">')
+    .replace(/🛡️ BUILD ADJUST/g, '</div></div><div class="resp-divider"></div><div class="resp-section"><div class="resp-label blue">🛡️ BUILD ADJUST</div><div class="resp-content">')
+    .replace(/💡 TIPS/g, '</div></div><div class="resp-divider"></div><div class="resp-section"><div class="resp-label gold">💡 TIPS</div><div class="resp-content">')
+    .replace(/⚡ SENSEI'S WORD/g, '</div></div><div class="resp-divider"></div><div class="resp-section"><div class="resp-label" style="color:var(--green);">⚡ SENSEI\'S WORD</div><div class="resp-content">')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br/>')
+    + '</div></div>';
+}
+
+async function sendMessage(text) {
+  const input = document.getElementById('chatInput');
+  const msg = text || input.value.trim();
+  if(!msg || isLoading) return;
+
+  if(!text) input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  // Add user message
+  addMessage('user', msg);
+  messages.push({role:'user', content: msg});
+
+  // Add typing indicator
+  const typingEl = addMessage('sensei', '', true);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content[0].text;
+
+    // Replace typing with actual response
+    typingEl.querySelector('.msg-bubble').innerHTML = formatResponse(reply);
+    messages.push({role:'assistant', content: reply});
+
+    // Scroll to bottom
+    const chatArea = document.getElementById('chatArea');
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+  } catch(err) {
+    typingEl.querySelector('.msg-bubble').innerHTML = '<span style="color:rgba(255,100,100,.7);">Sensei is unavailable right now. Check your connection.</span>';
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage(text);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+// ── IMAGE HANDLING ──
+let attachedImage = null;
+
+function handleImage(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    attachedImage = e.target.result;
+    document.getElementById('imgPreviewImg').src = attachedImage;
+    document.getElementById('imgPreview').style.display = 'block';
+    document.getElementById('imgBtn').classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  attachedImage = null;
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgInput').value = '';
+  document.getElementById('imgBtn').classList.remove('has-img');
+}
+
+// Override sendMessage to support images
+const originalSendMessage = sendMessage;
+async function sendMessage(text) {
+  const input = document.getElementById('chatInput');
+  const msg = text || input.value.trim();
+  if((!msg && !attachedImage) || isLoading) return;
+
+  if(!text) input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const chatArea = document.getElementById('chatArea');
+  const welcome = document.getElementById('welcomeMsg');
+  if(welcome) welcome.style.display = 'none';
+
+  // Build user message content
+  let userContent;
+  let displayMsg = msg || 'Analyze this champion select screenshot';
+
+  if(attachedImage) {
+    // Show preview in chat
+    const msgEl = document.createElement('div');
+    msgEl.className = 'msg msg-user';
+    msgEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <img src="${attachedImage}" style="max-width:200px;border-radius:10px;border:1px solid var(--bdr);"/>
+        ${msg ? `<div class="msg-bubble">${msg}</div>` : ''}
+      </div>`;
+    chatArea.appendChild(msgEl);
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    // Build multipart content for API
+    const base64 = attachedImage.split(',')[1];
+    const mediaType = attachedImage.split(';')[0].split(':')[1];
+    userContent = [
+      {type:'image', source:{type:'base64', media_type:mediaType, data:base64}},
+      {type:'text', text: msg || 'Analyze this champion select screenshot. Tell me what champions you see, who I should be playing, what items to build, and give me key tips for this matchup.'}
+    ];
+    clearImage();
+  } else {
+    // Text only
+    addMessage('user', msg);
+    userContent = msg;
+  }
+
+  messages.push({role:'user', content: userContent});
+
+  // Typing indicator
+  const typingEl = addMessage('sensei', '', true);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content[0].text;
+    typingEl.querySelector('.msg-bubble').innerHTML = formatResponse(reply);
+    messages.push({role:'assistant', content: reply});
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+  } catch(err) {
+    typingEl.querySelector('.msg-bubble').innerHTML = '<span style="color:rgba(255,100,100,.7);">Sensei is unavailable. Check your connection.</span>';
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+// Update system prompt to mention vision capability
+const origBuildSystem = buildSystemPrompt;
+
+// Tab switching
+document.querySelectorAll('.ti').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.ti').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+  });
+});
+</script>
+</body>
+</html>
