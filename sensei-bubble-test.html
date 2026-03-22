@@ -390,8 +390,8 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:'Rajdhani',san
 </div>
 
 <!-- ══ SENSEI BUBBLE ══ -->
-<div class="sensei-bubble" id="senseiB" onclick="openPanel()">
-  <div class="sensei-bubble-inner">
+<div class="sensei-bubble" id="senseiB">
+  <div class="sensei-bubble-inner" id="senseiBtn">
     <div class="bubble-icon">🥋</div>
     <div class="bubble-label">Sensei</div>
     <div class="bubble-dot"></div>
@@ -502,7 +502,7 @@ const CHAMPS=[
   // JUNGLE
   {n:'Amumu',r:'Jungle',e:'💛'},{n:'Diana',r:'Jungle',e:'🌙'},{n:'Evelynn',r:'Jungle',e:'💜'},
   {n:'Fizz',r:'Jungle',e:'🐟'},{n:'Graves',r:'Jungle',e:'🔫'},{n:'Hecarim',r:'Jungle',e:'🐴'},
-  {n:'Jarvan IV',r:'Jungle',e:'👑'},{n:'Kha'Zix',r:'Jungle',e:'🦗'},{n:'Kindred',r:'Jungle',e:'🐺'},
+  {n:'Jarvan IV',r:'Jungle',e:'👑'},{n:"Kha'Zix",r:'Jungle',e:'🦗'},{n:'Kindred',r:'Jungle',e:'🐺'},
   {n:'Lee Sin',r:'Jungle',e:'🥋'},{n:'Master Yi',r:'Jungle',e:'⚔️'},{n:'Nautilus',r:'Jungle',e:'⚓'},
   {n:'Nidalee',r:'Jungle',e:'🐆'},{n:'Nunu & Willump',r:'Jungle',e:'❄️'},{n:'Olaf',r:'Jungle',e:'🪓'},
   {n:'Rammus',r:'Jungle',e:'🌀'},{n:'Rengar',r:'Jungle',e:'🦁'},{n:'Shyvana',r:'Jungle',e:'🐉'},
@@ -544,6 +544,14 @@ function openPanel(){
   document.getElementById('overlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
+
+// Bubble tap — works on both mobile and desktop
+const senseiBtn = document.getElementById('senseiBtn');
+senseiBtn.addEventListener('click', openPanel);
+senseiBtn.addEventListener('touchend', function(e){
+  e.preventDefault();
+  openPanel();
+}, {passive:false});
 function closePanel(){
   document.getElementById('panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
